@@ -40,6 +40,7 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
+    """Отправляет сообщение в Телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
@@ -48,6 +49,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
+    """Возвращаем ответ API, преобразовав его к типам данных Python."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
 
@@ -73,7 +75,10 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-
+    """
+    Проверяет ответ API на корректность.
+    В случае успеха, выводит список домашних работ.
+    """
     if not isinstance(response, dict):
         error_message = 'Не верный тип ответа API'
         logging.error(error_message)
@@ -96,6 +101,7 @@ def check_response(response):
 
 
 def parse_status(homework):
+    """Возвращает статус домашней работы."""
     if 'homework_name' not in homework:
         error_message = 'Ключ homework_name отсутствует'
         logging.error(error_message)
@@ -121,6 +127,7 @@ def parse_status(homework):
 
 
 def check_tokens():
+    """Проверяет доступность переменных окружения."""
     return not (
         not PRACTICUM_TOKEN
         or not TELEGRAM_TOKEN
@@ -130,7 +137,6 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
-
     if not check_tokens():
         error_message = 'Токены недоступны'
         logging.error(error_message)
