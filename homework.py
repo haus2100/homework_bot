@@ -9,7 +9,6 @@ from requests import RequestException
 from dotenv import load_dotenv
 from http import HTTPStatus
 
-from logging.handlers import RotatingFileHandler
 
 load_dotenv()
 
