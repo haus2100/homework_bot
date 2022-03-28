@@ -31,7 +31,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -44,7 +44,8 @@ def send_message(bot, message):
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
     except Exception as error:
-        logging.error(f'Сообщение не отправлено {error}')
+        error_message = f'Сообщение не отправлено {error}'
+        logging.error(error_message)
 
 
 def get_api_answer(current_timestamp):
@@ -59,7 +60,7 @@ def get_api_answer(current_timestamp):
             params=params
         )
     except requests.exceptions.RequestException as error:
-        logging.error(f'Ошибка URL {error}')
+        logging.error(f'Ошибка, статус запроса {error}')
         raise SystemExit(error)
     if homework_statuses.status_code != HTTPStatus.OK:
         error_message = 'Ошибка Request'
@@ -115,12 +116,12 @@ def parse_status(homework):
 
     if homework_name is None or homework_status is None:
         return 'Работа не сдана на проверку'
-    if homework_status not in HOMEWORK_STATUSES:
+    if homework_status not in VERDICTS:
         error_message = 'Неизвестный статус домашней работы'
         logging.error(error_message)
         raise Exception(error_message)
 
-    verdict = HOMEWORK_STATUSES.get(homework_status)
+    verdict = VERDICTS.get(homework_status)
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -159,7 +160,7 @@ def main():
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            logging.error(message)
+            send_message(bot, message)
             time.sleep(RETRY_TIME)
 
 
