@@ -45,7 +45,8 @@ def send_message(bot, message):
         logger.info('Сообщение отправлено')
     except Exception as error:
         error_message = f'Сообщение не отправлено {error}'
-        logging.error(error_message)
+        logger.error(error_message)
+        raise Exception(error)
 
 
 def get_api_answer(current_timestamp):
@@ -60,16 +61,16 @@ def get_api_answer(current_timestamp):
             params=params
         )
     except requests.exceptions.RequestException as error:
-        logging.error(f'Ошибка, статус запроса {error}')
+        logger.error(f'Ошибка, статус запроса {error}')
         raise SystemExit(error)
     if homework_statuses.status_code != HTTPStatus.OK:
         error_message = 'Ошибка Request'
-        logging.error(error_message)
+        logger.error(error_message)
         raise RequestException(error_message)
     try:
         response = homework_statuses.json()
     except Exception as error:
-        logging.error(f'Нет ожидаемого ответа сервера {error}')
+        logger.error(f'Нет ожидаемого ответа сервера {error}')
         raise Exception(error)
     return response
 
@@ -81,20 +82,20 @@ def check_response(response):
     """
     if not isinstance(response, dict):
         error_message = 'Не верный тип ответа API'
-        logging.error(error_message)
+        logger.error(error_message)
         raise TypeError(error_message)
     if 'homeworks' not in response:
         error_message = 'Ключ homeworks отсутствует'
-        logging.error(error_message)
+        logger.error(error_message)
         raise KeyError(error_message)
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         error_message = 'homeworks не является списком'
-        logging.error(error_message)
+        logger.error(error_message)
         raise TypeError(error_message)
     if len(homeworks) == 0:
         error_message = 'Пустой список домашних работ'
-        logging.error(error_message)
+        logger.error(error_message)
         raise ValueError(error_message)
     homework = homeworks[0]
     return homework
@@ -104,11 +105,11 @@ def parse_status(homework):
     """Возвращает статус домашней работы."""
     if 'homework_name' not in homework:
         error_message = 'Ключ homework_name отсутствует'
-        logging.error(error_message)
+        logger.error(error_message)
         raise KeyError(error_message)
     if 'status' not in homework:
         error_message = 'Ключ status отсутствует'
-        logging.error(error_message)
+        logger.error(error_message)
         raise KeyError(error_message)
 
     homework_name = homework.get('homework_name')
@@ -118,7 +119,7 @@ def parse_status(homework):
         return 'Работа не сдана на проверку'
     if homework_status not in VERDICTS:
         error_message = 'Неизвестный статус домашней работы'
-        logging.error(error_message)
+        logger.error(error_message)
         raise Exception(error_message)
 
     verdict = VERDICTS.get(homework_status)
@@ -139,7 +140,7 @@ def main():
     """Основная логика работы бота."""
     if not check_tokens():
         error_message = 'Токены недоступны'
-        logging.error(error_message)
+        logger.error(error_message)
         raise Exception(error_message)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
@@ -161,11 +162,12 @@ def main():
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if prev_error != str(error):
-                prev_error = str(error)
-                send_message(bot, message)
-            logger.error(message)
-            time.sleep(RETRY_TIME)
+            logger.exception(message)
+            try:
+                bot.send_message(TELEGRAM_CHAT_ID, message)
+            except Exception as error:
+                logger.exception(f'Ошибка при отправке сообщения: {error}')
+        time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
