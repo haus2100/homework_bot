@@ -62,7 +62,7 @@ def get_api_answer(current_timestamp):
         )
     except requests.exceptions.RequestException as error:
         logger.error(f'Ошибка, статус запроса {error}')
-        raise SystemExit(error)
+        raise Exception(error)
     if homework_statuses.status_code != HTTPStatus.OK:
         error_message = 'Ошибка Request'
         logger.error(error_message)
@@ -143,29 +143,26 @@ def main():
         logger.error(error_message)
         raise Exception(error_message)
 
+    current_timestamp = 1
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
+            homework = check_response(response)
 
-            if response:
-                homework = check_response(response)
-                logger.info('Есть новости')
-                message = parse_status(homework)
+            if homework and len(homework):
+                message = parse_status(homework[0])
                 send_message(bot, message)
-
-            current_timestamp = response.get('current_date')
-            time.sleep(RETRY_TIME)
+            else:
+                logger.debug('Новых статусов - НЕТ')
+            current_timestamp = response['current_date']
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.exception(message)
-            try:
-                bot.send_message(TELEGRAM_CHAT_ID, message)
-            except Exception as error:
-                logger.exception(f'Ошибка при отправке сообщения: {error}')
+            send_message(bot, message)
         time.sleep(RETRY_TIME)
 
 
