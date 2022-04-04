@@ -164,8 +164,7 @@ def main():
             if message != prev_error:
                 send_message(bot, message)
                 prev_error = message
-        finally:
-            time.sleep(RETRY_TIME)
+        time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
