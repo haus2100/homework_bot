@@ -46,7 +46,7 @@ def send_message(bot, message):
     except Exception as error:
         error_message = f'Сообщение не отправлено {error}'
         logger.error(error_message)
-        raise Exception(error)
+        raise False
 
 
 def get_api_answer(current_timestamp):
@@ -138,32 +138,34 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
+    prev_error = None
     if not check_tokens():
         error_message = 'Токены недоступны'
         logger.error(error_message)
         raise Exception(error_message)
 
-    current_timestamp = 1
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework = check_response(response)
+            homeworks = check_response(response)
+            message = parse_status(homeworks)
 
-            if homework and len(homework):
-                message = parse_status(homework[0])
+            if message != prev_error:
+                prev_error = message
                 send_message(bot, message)
             else:
-                logger.debug('Новых статусов - НЕТ')
-            current_timestamp = response['current_date']
+                logger.debug('Новых данных нет')
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            logger.exception(message)
-            send_message(bot, message)
-        time.sleep(RETRY_TIME)
+            if message != prev_error:
+                send_message(bot, message)
+                prev_error = message
+        finally:
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
