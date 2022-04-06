@@ -139,6 +139,7 @@ def check_tokens():
 def main():
     """Основная логика работы бота."""
     prev_error = None
+    errors = True
     if not check_tokens():
         error_message = 'Токены недоступны'
         logger.error(error_message)
@@ -151,20 +152,21 @@ def main():
         try:
             response = get_api_answer(current_timestamp)
             homeworks = check_response(response)
-            message = parse_status(homeworks)
 
-            if message != prev_error:
-                prev_error = message
+            if homeworks and prev_error != homeworks[0]:
+                message = parse_status(homeworks)
                 send_message(bot, message)
-            else:
-                logger.debug('Новых данных нет')
+                prev_error = homeworks[0]
+            logger.info('Изменений нет, ждем 10 минут и проверяем')
+            time.sleep(RETRY_TIME)
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if message != prev_error:
+            if errors:
+                errors = False
                 send_message(bot, message)
-                prev_error = message
-        time.sleep(RETRY_TIME)
+            logger.critical(message)
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
