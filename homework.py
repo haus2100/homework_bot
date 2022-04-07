@@ -154,7 +154,7 @@ def main():
             homework = check_response(response)
             if homework:
                 message = parse_status(homework[0])
-                send_message(bot, message)               
+                send_message(bot, message)
             else:
                 logger.debug('Отсутствие в ответе новых статусов')
         except Exception as error:
