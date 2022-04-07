@@ -42,7 +42,8 @@ def send_message(bot, message):
     """Отправляет сообщение в Телеграм."""
     try:
         logger.info('Начата отправка сообщения')
-        bot.send_message(TELEGRAM_CHAT_ID,
+        bot.send_message(
+            TELEGRAM_CHAT_ID,
             text=message)
         logger.info(f'Сообщение {message} отправлено')
     except Exception as error:
@@ -152,9 +153,8 @@ def main():
             current_timestamp = response.get('current_date')
             homework = check_response(response)
             if homework:
-                send_message(bot, message)
                 message = parse_status(homework[0])
-                
+                send_message(bot, message)               
             else:
                 logger.debug('Отсутствие в ответе новых статусов')
         except Exception as error:
