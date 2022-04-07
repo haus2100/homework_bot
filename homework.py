@@ -41,12 +41,12 @@ VERDICTS = {
 def send_message(bot, message):
     """Отправляет сообщение в Телеграм."""
     try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info('Сообщение отправлено')
+        logger.info('Начата отправка сообщения')
+        bot.send_message(TELEGRAM_CHAT_ID,
+            text=message)
+        logger.info(f'Сообщение {message} отправлено')
     except Exception as error:
-        error_message = f'Сообщение не отправлено {error}'
-        logger.error(error_message)
-        raise False
+        logger.error(f'Ошибка при отправке {message} сообщения: {error}')
 
 
 def get_api_answer(current_timestamp):
@@ -138,34 +138,32 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
-    prev_error = None
-    errors = True
     if not check_tokens():
         error_message = 'Токены недоступны'
         logger.error(error_message)
         raise Exception(error_message)
-
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    send_message(bot, 'Бот стартовал')
     current_timestamp = int(time.time())
-
+    prev_error = ''
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homeworks = check_response(response)
-
-            if homeworks and prev_error != homeworks[0]:
-                message = parse_status(homeworks)
+            current_timestamp = response.get('current_date')
+            homework = check_response(response)
+            if homework:
                 send_message(bot, message)
-                prev_error = homeworks[0]
-            logger.info('Изменений нет, ждем 10 минут и проверяем')
-            time.sleep(RETRY_TIME)
-
+                message = parse_status(homework[0])
+                
+            else:
+                logger.debug('Отсутствие в ответе новых статусов')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if errors:
-                errors = False
+            logger.error(message)
+            if message != prev_error:
+                prev_error = message
                 send_message(bot, message)
-            logger.critical(message)
+        finally:
             time.sleep(RETRY_TIME)
 
 
