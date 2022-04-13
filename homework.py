@@ -162,7 +162,11 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
             if message != prev_error:
-                send_message(bot, message)
+                if send_message() is False:
+                    message = f'Бот остановлен с ошибкой'
+                    send_message(bot, message)
+                    sys.exit(1)
+                send_message() is True
                 prev_error = message
         finally:
             time.sleep(RETRY_TIME)
