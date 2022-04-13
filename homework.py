@@ -163,7 +163,7 @@ def main():
             logger.error(message)
             if message != prev_error:
                 if send_message() is False:
-                    message = f'Бот остановлен с ошибкой'
+                    message = ('Бот остановлен с ошибкой')
                     send_message(bot, message)
                     sys.exit(1)
                 send_message() is True
