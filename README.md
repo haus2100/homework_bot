@@ -24,7 +24,7 @@ __На автономном сервере windows:__
 
 _Клонировать репозиторий и перейти в него в командной строке:_
 ```
-git clone https://github.com/Galenfea/homework_bot.git
+git clone https://github.com/haus2100/homework_bot.git
 ```
 ```
 cd homework_bot
